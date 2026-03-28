@@ -1,0 +1,169 @@
+openapi: 3.0.3
+info:
+  title: Fitness Tracker API
+  version: 1.0.0
+  description: REST API on Yandex userver with session-based Bearer authentication.
+servers:
+  - url: http://localhost:8080
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: SessionToken
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    RegisterRequest:
+      type: object
+      required: [login, name, surname, email, password]
+      properties:
+        login: { type: string }
+        name: { type: string }
+        surname: { type: string }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 6 }
+    LoginRequest:
+      type: object
+      required: [login, password]
+      properties:
+        login: { type: string }
+        password: { type: string }
+    LoginResponse:
+      type: object
+      properties:
+        token: { type: string }
+        token_type: { type: string, example: Bearer }
+        expires_at: { type: string }
+        user_id: { type: integer, format: int64 }
+      required: [token, token_type, expires_at, user_id]
+    User:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        login: { type: string }
+        name: { type: string }
+        surname: { type: string }
+        email: { type: string }
+        created_at: { type: string }
+      required: [id, login, name, surname, email, created_at]
+    Exercise:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        name: { type: string }
+        description: { type: string }
+        muscle_group: { type: string }
+        created_at: { type: string }
+      required: [id, name, muscle_group, created_at]
+    Workout:
+      type: object
+      properties:
+        id: { type: integer, format: int64 }
+        user_id: { type: integer, format: int64 }
+        date: { type: string, format: date }
+        duration: { type: integer }
+        created_at: { type: string }
+      required: [id, user_id, date, duration, created_at]
+paths:
+  /auth/register:
+    post:
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RegisterRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { description: Invalid request, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+        '409': { description: Duplicate login/email, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /auth/login:
+    post:
+      summary: Login user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LoginResponse' }
+        '401': { description: Invalid credentials, content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } } }
+  /exercises:
+    get:
+      summary: List exercises
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create exercise (protected)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, muscle_group]
+              properties:
+                name: { type: string }
+                description: { type: string }
+                muscle_group: { type: string }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Exercise' }
+        '401': { description: Unauthorized }
+  /workouts:
+    post:
+      summary: Create workout (protected)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, date]
+              properties:
+                user_id: { type: integer, format: int64 }
+                date: { type: string, format: date }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Workout' }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+  /users/{id}/workouts:
+    get:
+      summary: User workouts (protected)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        '200': { description: OK }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+        '404': { description: User not found }
