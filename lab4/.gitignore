@@ -1,0 +1,40 @@
+# Build artifacts
+build/
+cmake-build-debug/
+cmake-build-release/
+*.o
+*.a
+*.so
+*.dylib
+*.exe
+*.out
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+Makefile
+*.cmake
+
+# Dependencies
+.conan/
+conan.lock
+
+# Test artifacts
+test_results/
+*.gcda
+*.gcno
+
+# Docker
+.dockerignore
+
+# Logs
+logs/
+*.log
