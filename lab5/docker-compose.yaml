@@ -1,0 +1,68 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: fitness_tracker_postgres_lab5
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fitness_tracker
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+      - ./data.sql:/docker-entrypoint-initdb.d/02_data.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:7
+    container_name: fitness_tracker_mongo_lab5
+    environment:
+      MONGO_INITDB_DATABASE: fitness_tracker
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./validation.js:/docker-entrypoint-initdb.d/01_validation.js:ro
+      - ./data.js:/docker-entrypoint-initdb.d/02_data.js:ro
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    platform: linux/amd64
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api
+    container_name: fitness_tracker_api_lab5
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    environment:
+      USERVER_PG_HOST: postgres
+      USERVER_PG_PORT: 5432
+      USERVER_PG_DB: fitness_tracker
+      USERVER_PG_USER: postgres
+      USERVER_PG_PASSWORD: postgres
+      USERVER_MONGO_URL: mongodb://mongo:27017/fitness_tracker
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./configs/config.yaml:/etc/fitness_tracker/config.yaml:ro
+
+volumes:
+  postgres_data:
+  mongo_data:
+
+networks:
+  default:
+    name: fitness_tracker_network_lab5

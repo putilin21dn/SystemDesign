@@ -1,0 +1,78 @@
+openapi: 3.0.3
+info:
+  title: Fitness Tracker Lab4 API
+  version: 1.0.0
+  description: C++ userver API with PostgreSQL endpoints from lab3 and MongoDB endpoints for lab4.
+servers:
+  - url: http://localhost:8080
+paths:
+  /exercises:
+    get:
+      summary: PostgreSQL exercise list from lab3
+      responses:
+        '200': { description: OK }
+    post:
+      summary: PostgreSQL exercise creation from lab3
+      responses:
+        '201': { description: Created }
+  /users:
+    post:
+      summary: PostgreSQL user creation from lab3
+      responses:
+        '201': { description: Created }
+  /users/{login}:
+    get:
+      summary: PostgreSQL user lookup from lab3
+      parameters:
+        - name: login
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /mongo/workouts:
+    get:
+      summary: List MongoDB workouts
+      parameters:
+        - name: user_id
+          in: query
+          required: false
+          schema: { type: string, example: user_001 }
+      responses:
+        '200':
+          description: MongoDB workouts
+    post:
+      summary: Create MongoDB workout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id, date, duration, exercises]
+              properties:
+                user_id: { type: string, example: user_001 }
+                date: { type: string, example: '2026-04-22T18:00:00Z' }
+                duration: { type: integer, minimum: 1 }
+                exercises:
+                  type: array
+                  items:
+                    type: object
+                    required: [exercise_id, sets, reps, weight]
+                    properties:
+                      exercise_id: { type: string, example: exercise_001 }
+                      name: { type: string, example: Barbell Squat }
+                      sets: { type: integer, minimum: 1 }
+                      reps: { type: integer, minimum: 1 }
+                      weight: { type: number, minimum: 0 }
+                tags:
+                  type: array
+                  items: { type: string }
+                notes: { type: string }
+      responses:
+        '201': { description: Created }
+  /mongo/stats/users:
+    get:
+      summary: MongoDB aggregation by user
+      responses:
+        '200': { description: Aggregated user workout statistics }
