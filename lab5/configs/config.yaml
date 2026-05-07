@@ -1,0 +1,110 @@
+components_manager:
+  task_processors:
+    main-task-processor:
+      worker_threads: 4
+    fs-task-processor:
+      worker_threads: 2
+
+  default_task_processor: main-task-processor
+
+  components:
+    server:
+      listener:
+        port: 8080
+        task_processor: main-task-processor
+
+    logging:
+      fs-task-processor: fs-task-processor
+      loggers:
+        default:
+          level: info
+          file_path: "@stderr"
+
+    testsuite-support: {}
+
+    dns-client:
+      fs-task-processor: fs-task-processor
+
+    postgres-db:
+      dbconnection: postgresql://postgres:postgres@postgres:5432/fitness_tracker
+      blocking_task_processor: fs-task-processor
+      dns_resolver: async
+
+    mongo-db:
+      dbconnection#env: USERVER_MONGO_URL
+      appname: fitness-tracker-lab5
+      conn_timeout: 2s
+      so_timeout: 10s
+      queue_timeout: 1s
+      initial_size: 4
+      max_size: 32
+      idle_limit: 16
+      connecting_limit: 4
+      maintenance_period: 15s
+      stats_verbosity: terse
+      dns_resolver: async
+
+    handler-auth-register:
+      path: /auth/register
+      method: POST
+      task_processor: main-task-processor
+
+    handler-auth-login:
+      path: /auth/login
+      method: POST
+      task_processor: main-task-processor
+
+    handler-users:
+      path: /users
+      method: POST
+      task_processor: main-task-processor
+
+    handler-user-by-login:
+      path: /users/{login}
+      method: GET
+      task_processor: main-task-processor
+
+    handler-user-search:
+      path: /users/search
+      method: GET
+      task_processor: main-task-processor
+
+    handler-exercises:
+      path: /exercises
+      method: GET
+      task_processor: main-task-processor
+
+    handler-exercises-create:
+      path: /exercises
+      method: POST
+      task_processor: main-task-processor
+
+    handler-workouts:
+      path: /workouts
+      method: POST
+      task_processor: main-task-processor
+
+    handler-workout-exercises:
+      path: /workouts/{workout_id}/exercises
+      method: POST
+      task_processor: main-task-processor
+
+    handler-user-workouts:
+      path: /users/{id}/workouts
+      method: GET
+      task_processor: main-task-processor
+
+    handler-user-stats:
+      path: /users/{id}/stats
+      method: GET
+      task_processor: main-task-processor
+
+    handler-mongo-workouts:
+      path: /mongo/workouts
+      method: GET,POST
+      task_processor: main-task-processor
+
+    handler-mongo-stats:
+      path: /mongo/stats/users
+      method: GET
+      task_processor: main-task-processor
